@@ -1,81 +1,199 @@
-﻿/* Unmerged change from project 'OpenLayers.Blazor (net6.0)'
-Before:
-namespace OpenLayers.Blazor.Model;
-After:
-using OpenLayers;
-using OpenLayers.Blazor;
-using OpenLayers.Blazor;
-using OpenLayers.Blazor.Model;
-*/
+﻿using System.Globalization;
+using System.Text.Json.Serialization;
 
 namespace OpenLayers.Blazor;
 
+/// <summary>
+/// Represents a coordinate of two points
+/// </summary>
+[JsonConverter(typeof(CoordinateConverter))]
 public class Coordinate : IEquatable<Coordinate>
 {
+    private static readonly char[] _separatorsAlt = new[] { '/', ':' };
+    private static readonly char[] _separators = new[] { ',', '/', ':' };
+
+    private readonly double[] _value;
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="Coordinate"/>.
+    /// </summary>
     public Coordinate()
     {
+        _value = new double[2];
     }
 
     /// <summary>
-    ///     New Point
+    /// Initializes a new instance of <see cref="Coordinate"/>.
     /// </summary>
-    /// <param name="coordinates">Latitude, Longitude</param>
-    public Coordinate(double y, double x)
+    /// <param name="coordinates">X/Longitude, Y/Latitude</param>
+    public Coordinate(double x, double y)
     {
-        Y = y;
-        X = x;
+        _value = new[] { x, y };
     }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="Coordinate"/>.
+    /// </summary>
+    /// <param name="coordinate"></param>
     public Coordinate(Coordinate coordinate)
     {
-        Y = coordinate.Y;
-        X = coordinate.X;
-    }
-
-    public double Latitude => Y;
-
-    public double Y
-    {
-        get => Coordinates[1];
-        set => Coordinates[1] = value;
-    }
-
-    public double Longitude => X;
-
-    public double X
-    {
-        get => Coordinates[0];
-        set => Coordinates[0] = value;
+        _value = coordinate._value;
     }
 
     /// <summary>
-    ///     Coordinate in OpenLayers Style: [Longitude, Latitude]
+    /// Initializes a new instance of <see cref="Coordinate"/>.
     /// </summary>
-    public double[] Coordinates { get; set; } = new double[2] { 0, 0 };
-
-    public bool Equals(Coordinate? other)
+    /// <param name="coordinates"></param>
+    /// <exception cref="ArgumentException"></exception>
+    public Coordinate(double[] coordinates)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return Coordinates.Equals(other.Coordinates);
+        if (coordinates.Length < 2)
+            throw new ArgumentException(nameof(coordinates));
+        _value = coordinates;
     }
-    public override string ToString() => $"{X}/{Y}";
-    
-    public static implicit operator Coordinate(string val) => Coordinate.Parse(val);
-    
-    private static Coordinate Parse(string val)
+
+    /// <summary>
+    /// Gets the internal array of points
+    /// </summary>
+    public double[] Value => _value;
+
+    /// <summary>
+    /// Latitude
+    /// </summary>
+    [JsonIgnore]
+    public double Latitude => Y;
+
+    /// <summary>
+    /// Y
+    /// </summary>
+    public double Y
+    {
+        get => _value[1];
+        set => _value[1] = value;
+    }
+
+    /// <summary>
+    /// Longitude
+    /// </summary>
+    [JsonIgnore]
+    public double Longitude => X;
+
+    /// <summary>
+    /// X
+    /// </summary>
+    public double X
+    {
+        get => _value[0];
+        set => _value[0] = value;
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return $"{X}/{Y}";
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="Coordinate"/>.
+    /// </summary>
+    /// <param name="val"></param>
+    public static implicit operator Coordinate(string val)
+    {
+        return Parse(val);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="Coordinate"/>.
+    /// </summary>
+    /// <param name="val"></param>
+    public static implicit operator Coordinate(double[] val)
+    {
+        return new Coordinate(val);
+    }
+
+    /// <summary>
+    /// Indicates if given objects are equal
+    /// </summary>
+    /// <param name="c1"></param>
+    /// <param name="c2"></param>
+    /// <returns>bool</returns>
+    public static bool operator ==(Coordinate? c1, Coordinate? c2)
+    {
+        if (c1 is null || c2 is null)
+            return false;
+        return c1.Equals(c2);
+    }
+
+    /// <summary>
+    /// Indicates if given objects are not equal
+    /// </summary>
+    /// <param name="c1"></param>
+    /// <param name="c2"></param>
+    /// <returns></returns>
+    public static bool operator !=(Coordinate? c1, Coordinate? c2)
+    {
+        return !c1.Equals(c2);
+    }
+
+    /// <summary>
+    /// Indexed access to coordinates
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public double this[int key]
+    {
+        get => _value[key];
+        set => _value[key] = value;
+    }
+
+
+    /// <summary>
+    /// Parses a new instances of <see cref="Coordinate"/>
+    /// </summary>
+    /// <param name="val"></param>
+    /// <param name="formatProvider"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static Coordinate Parse(string val, IFormatProvider? formatProvider = null)
     {
         val = val.Trim();
-        var parts = val.Split(',', '/', ':');
+
+        var numberFormatInfo = formatProvider?.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo ?? CultureInfo.CurrentCulture.NumberFormat;
+
+        var parts = val.Split(numberFormatInfo.CurrencyDecimalSeparator == "," ? _separatorsAlt : _separators);
 
         if (parts.Length != 2)
             throw new InvalidOperationException("Cannot parse coordinate");
 
-        return new Coordinate(double.Parse(parts[0]), double.Parse(parts[1]));
+        return new Coordinate(double.Parse(parts[0], formatProvider), double.Parse(parts[1], formatProvider));
     }
 
     /// <summary>
-    ///     Distance in kilometers
+    /// Parses a new instances of <see cref="Coordinate"/>
+    /// </summary>
+    /// <param name="val"></param>
+    /// <param name="result"></param>
+    /// <param name="formatProvider"></param>
+    /// <returns></returns>
+    public static bool TryParse(string val, out Coordinate? result, IFormatProvider? formatProvider = null)
+    {
+        try
+        {
+            result = Parse(val, formatProvider);
+            return true;
+        }
+        catch
+        {
+            result = null;
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Calculates distance in kilometers
     /// </summary>
     /// <param name="target"></param>
     /// <returns></returns>
@@ -98,7 +216,7 @@ public class Coordinate : IEquatable<Coordinate>
     }
 
     /// <summary>
-    ///     Calcola un punto distante in km
+    ///     Calculates distance.
     /// </summary>
     /// <param name="distance">distance in km</param>
     /// <returns></returns>
@@ -126,16 +244,17 @@ public class Coordinate : IEquatable<Coordinate>
         return new Coordinate(lat2, lon2);
     }
 
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
-        return Equals((Coordinate)obj);
-    }
-
+    /// <inheritdoc />
     public override int GetHashCode()
     {
-        return Coordinates.GetHashCode();
+        return _value.GetHashCode();
+    }
+
+    /// <inheritdoc />
+    public bool Equals(Coordinate? other)
+    {
+        if (other is null)
+            return false;
+        return _value[0].Equals(other._value[0]) && _value[1].Equals(other._value[1]);
     }
 }

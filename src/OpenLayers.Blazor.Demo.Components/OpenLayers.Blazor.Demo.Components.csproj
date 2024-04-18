@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Pages\BingMapDemo.razor" />
+		<EmbeddedResource Include="Pages\CustomWMTSMap.razor" />
+		<EmbeddedResource Include="Pages\GeoJsonDemo.razor" />
+		<EmbeddedResource Include="Pages\Index.razor" />
+		<EmbeddedResource Include="Pages\LayersDemo.razor" />
+		<EmbeddedResource Include="Pages\MarkersDemo.razor" />
+		<EmbeddedResource Include="Pages\OpenStreetMapDemo.razor" />
+		<EmbeddedResource Include="Pages\ShapesDemo.razor" />
+		<EmbeddedResource Include="Pages\SwissMapLayersDemo.razor" />
+		<EmbeddedResource Include="Pages\DrawDemo.razor" />
+		<EmbeddedResource Include="Pages\GermanGdzDemo.razor" />
+		<EmbeddedResource Include="Pages\FlightTracker.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\OpenLayers.Blazor\OpenLayers.Blazor.csproj" />
+	</ItemGroup>
+
+</Project>

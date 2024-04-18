@@ -1,0 +1,103 @@
+﻿@page "/drawdemo/{MapType?}"
+@using System.Text.Json
+@rendermode Components.RenderMode.DefaultRenderMode
+
+<div class="card mt-2 mb-2">
+    <div class="card-header">
+        <h3 class="card-title">Drawing Demo</h3>
+    </div>
+    <div class="card-body">
+        <div class="btn-toolbar" role="toolbar">
+            <div class="btn-group" data-toggle="buttons">
+                <input type="checkbox" class="btn-check" id="btndraw" autocomplete="off" @bind="_enabledraw">
+                <label class="btn btn-outline-primary" for="btndraw">Draw</label>
+                <input type="checkbox" class="btn-check" id="btnedit" autocomplete="off" @bind="_enableedit">
+                <label class="btn btn-outline-primary" for="btnedit">Edit</label>
+                <input type="checkbox" class="btn-check" id="btnsnap" autocomplete="off" @bind="_snap">
+                <label class="btn btn-outline-primary" for="btnsnap">Snap</label>
+                <input type="checkbox" class="btn-check" id="btnfreehand" autocomplete="off" @bind="_freehand">
+                <label class="btn btn-outline-primary" for="btnfreehand">Freehand</label>
+            </div>
+            <select id="type" @bind="_shapeType">
+                <option value="@(ShapeType.Point)">Point</option>
+                <option value="@(ShapeType.LineString)">LineString</option>
+                <option value="@(ShapeType.Polygon)">Polygon</option>
+                <option value="@(ShapeType.Circle)">Circle</option>
+            </select>
+            <input type="color" class="form-control form-control-color" id="bgColorInput" title="Background" @bind="_styleOptions.Fill.Color">
+            <input type="color" class="form-control form-control-color" id="borderColorInput" title="Background" @bind="_styleOptions.Stroke.Color">
+            <input type="range" min="1" max="30" @bind="_styleOptions.Stroke.Width" title="Border Size">
+            <input type="button" class="btn btn-primary" value="Undo" @onclick="() => _map.Undo()" />
+            <input type="button" class="btn btn-secondary" value="Clear" @onclick="() => _map.ShapesList.Clear()" />
+        </div>
+    </div>
+</div>
+
+@if (MapType == "osm")
+{
+    <OpenStreetMap @ref="_map" Style="height:800px;" Class="card" OnShapeAdded="StateHasChanged" EnableEditShapes="_enableedit" EnableNewShapes="_enabledraw" EnableShapeSnap="_snap" ShapeStyleCallback="(shape) => _styleOptions" NewShapeType="_shapeType" Freehand="_freehand">
+    </OpenStreetMap>
+}
+else
+{
+    <SwissMap @ref="_map" Style="height: 800px;" Class="card" OnShapeAdded="StateHasChanged" EnableEditShapes="_enableedit" EnableNewShapes="_enabledraw" EnableShapeSnap="_snap" ShapeStyleCallback="(shape) => _styleOptions" NewShapeType="_shapeType" Freehand="_freehand">
+        <Features>
+            <Line Points="new[] { new Coordinate(2604200, 1197650), new Coordinate(2624200, 1177650) }" BorderColor="red" BorderSize="2"></Line>
+            <Circle Center="_center" Radius="2000" BorderSize="3" BorderColor="blue" BackgroundColor="#55229933"></Circle>
+            <Point Coordinate="new Coordinate(2683276.620804008, 1247123.8311215444)" BackgroundColor="green" Radius="20"></Point>
+        </Features>
+    </SwissMap>
+}
+
+@if (_map != null)
+{
+ <div class="card mt-2 mb-2">
+    <div class="card-header">
+        <h5 class="card-title">Shapes</h5>
+    </div>
+    <div class="card-body">
+        @foreach (var shape in _map.ShapesList)
+        {
+            <p>
+                <strong>@shape.Id @shape.Type @shape.GeometryType</strong>
+                <ul>
+                    @if (shape.Coordinates != null)
+                    {
+                            @JsonSerializer.Serialize(shape.Coordinates)
+                    }
+                </ul>
+            </p>
+        }
+    </div>
+</div>
+}
+
+<CodeView Source="DrawDemo.razor" />
+
+@code {
+    [Parameter] public string? MapType { get; set; }
+    private Map? _map;
+    private ShapeType _shapeType = ShapeType.LineString;
+    private Coordinate _center = new(2604200, 1197650);
+    private bool _enabledraw, _enableedit, _snap = true, _freehand;
+
+    private StyleOptions _styleOptions = new StyleOptions()
+    {
+        Stroke = new StyleOptions.StrokeOptions()
+        {
+            Color = "#dd1111",
+            Width = 2
+        },
+        Fill = new StyleOptions.FillOptions()
+        {
+            Color = "#563d7c"
+        }
+    };
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            StateHasChanged();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+}

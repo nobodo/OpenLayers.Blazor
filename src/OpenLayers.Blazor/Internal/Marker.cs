@@ -2,35 +2,26 @@
 
 public class Marker : Shape
 {
-    private Coordinate _coordinate;
-
     public Marker()
     {
-        Geometry = new Geometry("Point");
+        Type = nameof(Marker);
+        GeometryType = GeometryTypes.Point;
         Scale = .2;
     }
 
-    public Marker(Coordinate coordinate) : this()
+    public Marker(Coordinate point) : this()
     {
-        Coordinate = coordinate;
-    }
-
-    public Coordinate Coordinate
-    {
-        get => _coordinate;
-        set
-        {
-            _coordinate = value;
-            Geometry.Coordinates = value?.Coordinates;
-        }
+        Point = point.Value;
     }
 
     public float[]? Size { get; set; }
 
     public float[]? Anchor { get; set; }
 
+    public double? Rotation { get; set; }
+
     public override int GetHashCode()
     {
-        return base.GetHashCode() & _coordinate.GetHashCode();
+        return HashCode.Combine(base.GetHashCode(), Size, Anchor);
     }
 }

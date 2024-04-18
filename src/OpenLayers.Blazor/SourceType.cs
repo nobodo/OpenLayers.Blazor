@@ -14,5 +14,21 @@ public enum SourceType
     XYZ,
     CartoDB,
     Stamen,
-    TileDebug
+    TileDebug,
+    StadiaMaps,
+    VectorKML,
+    VectorEsriJson,
+    VectorGeoJson,
+    VectorTopoJson,
+    VectorMVT,
+    VectorIGC,
+    VectorPolyline,
+    VectorWKT,
+    VectorWKB,
+    VectorGML2,
+    VectorGML3,
+    VectorGPX,
+    VectorOSMXML,
+    VectorWFS,
+    Graticule
 }

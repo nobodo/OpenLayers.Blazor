@@ -1,0 +1,44 @@
+﻿@using System.Reflection
+@using System.IO
+@if (_code != null)
+{
+    <div class="card mt-2 mb-2">
+        <div class="card-header">
+            <h5 class="card-subtitle">@Source</h5>
+        </div>
+        <div class="card-body p-0">
+            <pre class="code m-0"><code class="html" style="text-wrap: wrap;">@_code</code></pre>
+        </div>
+    </div>
+}
+
+@code {
+    private string? _code;
+
+    [Inject]
+    private IJSRuntime _js { get; set; }
+
+    [Parameter]
+    public string? Source { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Source == null)
+            return;
+
+        var assembly = Assembly.GetExecutingAssembly();
+        var name = assembly.GetManifestResourceNames().FirstOrDefault(p => p.EndsWith(Source));
+
+        if (name == null)
+            return;
+
+        using TextReader reader = new StreamReader(assembly.GetManifestResourceStream(name));
+        _code = await reader.ReadToEndAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await _js.InvokeVoidAsync("highlightSnippet");
+    }
+
+}

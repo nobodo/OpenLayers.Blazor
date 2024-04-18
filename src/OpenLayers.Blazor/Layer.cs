@@ -30,6 +30,7 @@ public class Layer : ComponentBase
         get => _internalLayer.Extent;
         set => _internalLayer.Extent = value;
     }
+
     [Parameter]
     public int? ZIndex
     {
@@ -108,7 +109,7 @@ public class Layer : ComponentBase
     }
 
     [Parameter]
-    public Dictionary<string, object> Params
+    public Dictionary<string, object> SourceParameters
     {
         get => _internalLayer.Source.Params;
         set => _internalLayer.Source.Params = value;
@@ -174,11 +175,7 @@ public class Layer : ComponentBase
     public string? Format
     {
         get => _internalLayer.Source.Format;
-        set
-        {
-            _internalLayer.Source.Format = value;
-            _internalLayer.Source.Params["format"] = value;
-        } 
+        set => _internalLayer.Source.Format = value;
     }
 
     [Parameter]
@@ -198,8 +195,29 @@ public class Layer : ComponentBase
     [Parameter]
     public string? Layers
     {
-        get => _internalLayer.Source.Params["layers"]?.ToString();
-        set => _internalLayer.Source.Params["layers"] = value;
+        get => _internalLayer.Source.Params.ContainsKey("LAYERS") ? _internalLayer.Source.Params["LAYERS"].ToString() : null;
+        set => _internalLayer.Source.Params["LAYERS"] = value;
+    }
+
+    [Parameter]
+    public string? Styles
+    {
+        get => _internalLayer.Source.Params.ContainsKey("STYLES") ? _internalLayer.Source.Params["STYLES"].ToString() : null;
+        set => _internalLayer.Source.Params["STYLES"] = value;
+    }
+
+    [Parameter]
+    public string? Title
+    {
+        get => _internalLayer.Properties.ContainsKey("TITLE") ? _internalLayer.Properties["TITLE"].ToString() : null;
+        set => _internalLayer.Properties["TITLE"] = value;
+    }
+
+    [Parameter]
+    public dynamic? FormatOptions
+    {
+        get => _internalLayer.Source.FormatOptions;
+        set => _internalLayer.Source.FormatOptions = value;
     }
 
     protected override void OnInitialized()
